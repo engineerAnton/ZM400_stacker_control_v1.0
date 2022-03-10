@@ -4,6 +4,8 @@
 #include <global.h>
 #include <functions.h>
 
+//Изменение!
+
 Debouncer debouncer(cutter_output, duration_ms);
 
 // MillisTimer carr_tim = MillisTimer(3000);
