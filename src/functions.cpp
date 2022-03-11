@@ -14,7 +14,13 @@ int long_3_arr = 6;
 int long_4_ptrn [] = {500, 200, 500, 200, 500, 200, 500, 1000};
 int long_4_arr = 8;
 
+int short_3_ptrn [] = {200, 50, 200, 50, 200, 1000};
+int short_3_arr = 6;
+int short_4_ptrn [] = {200, 50, 200, 50, 200, 50, 200, 2000};
+int short_4_arr = 8;
+
 sllib led_r(led_red);
+sllib led_g(led_green);
 sllib buzz(buzzer);
 
 // Создание объектов "Приводы"
@@ -66,8 +72,7 @@ bool cont_init(){
         led_r.setOffSingle();
         buzz.setOffSingle();
         return true;   
-    }
-    if (digitalRead(sw_cont) == false){
+    }else{
         led_r.patternSingle(long_1_ptrn, long_1_arr);
         buzz.patternSingle(long_1_ptrn, long_1_arr);
         return false;
@@ -79,8 +84,7 @@ bool feeder_init(){
         led_r.patternSingle(long_2_ptrn, long_2_arr);
         buzz.patternSingle(long_2_ptrn, long_2_arr);
         return false;
-    }
-    if (digitalRead(opt_label) == false){
+    }else{
         led_r.setOffSingle();
         buzz.setOffSingle();
         return true;
@@ -103,11 +107,25 @@ bool carr_init(){
             }
         }        
         return false;
-    }
-    if (digitalRead(opt_carr) == true){
+    }else{
         return true;
     }
 };
+
+bool carr_move(){
+    uint32_t now = millis();
+    while (millis() - now < 1000){   
+        led_g_on();         
+        mot_CR.startMove(1);
+        mot_CR.nextAction();
+        if (digitalRead(opt_carr) == true){
+            mot_CR.stop();
+            led_g_off();
+            return true;
+        }
+    }
+    return false;
+}
 
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
@@ -125,8 +143,52 @@ bool bed_init(){
             }
         }        
         return false;
-    }
-    if (digitalRead(sw_bed_high) == true){
+    }else{
         return true;
     }
 };
+
+bool bed_down(){
+    mot_BD.rotate(-20);
+    return true;
+}
+
+bool feeder_down(){
+    digitalWrite(coil, HIGH);
+    return true;
+}
+
+bool feeder_up(){
+    digitalWrite(coil, LOW);
+    return true;
+}
+
+bool feeder_move(){    
+    uint32_t now = millis();
+    while (millis() - now < 1000){
+        mot_FR.rotate(550);
+        if (digitalRead(opt_label) == false){
+            return true;
+        }
+    }        
+    return false;
+};
+
+void led_g_on(){
+    digitalWrite(led_green, HIGH);
+}
+
+void led_g_off(){
+    digitalWrite(led_green, LOW);
+}
+
+bool cont_remove(){
+    led_g.patternSingle(short_4_ptrn, short_4_arr);
+    buzz.patternSingle(short_4_ptrn, short_4_arr);
+    if (digitalRead(sw_cont) == false){
+        led_g.setOffSingle();
+        buzz.setOffSingle();
+        return true;
+    }
+    return false;
+}
