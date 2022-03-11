@@ -101,7 +101,8 @@ void loop() {
     // Успешно - переход в 11. Не упешно - повтор.
     case 9:
       if (bed_init() == true){
-        Serial.println("Bed initialized!");        
+        Serial.println("Bed initialized!");
+        flag_run = 0;       
         state = 11; 
       }
       if (bed_init() == false){
@@ -146,7 +147,7 @@ void loop() {
       }      
       break;
     // 17 Протянуть этикетку. Этикетка освободила датчик за t время?
-    // Успешно - переход в 19. Не успешно - печать на паузу, переход в 5
+    // Успешно - переход в 19. Не успешно - переход в 5
     case 17:
       Serial.println("Feeder move");
       if (feeder_move() == true){
@@ -156,30 +157,33 @@ void loop() {
         state = 5;
       }
       break;
-    // 19 Движение каретки. Каретка отработала за t время?
-    // Успешно - переход в 21. Не успешно - печать на паузу, переход в 7
+
+    // 19 Поднять блок протяжки
+    // Переход в 21
     case 19:
+      Serial.println("Feeder up");
+      if (feeder_up() == true){
+        state = 21;
+      }
+      break;
+    // 21 Движение каретки. Каретка отработала за t время?
+    // Успешно - переход в 23. Не успешно - переход в 7
+    case 21:
       Serial.println("Carriage move");
       if (carr_move() == true){
-        state = 21;
+        state = 23;
       }
       if (carr_move() == false){
         state = 7;
       }
       break;
-    // 21 Поднять блок протяжки
-    // Переход в 23
-    case 21:
-      Serial.println("Feeder up");
-      if (feeder_up() == true){
-        state = 23;
-      }
-      break;
+    
     // 23 Контейнер заполнен?
     // Заполнен - переход в 25. Не заполнен - команда продолжить печать, переход 11
     case 23:
       if (digitalRead(sw_bed_high) == false){
         Serial.println("Laying the next label...");
+        flag_run = 0;
         Serial2.write("~PS");
         state = 11;
       }
