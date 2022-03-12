@@ -4,7 +4,7 @@
 #include <singleLEDLibrary.h>
 #include <MillisTimer.h>
 
-// Паттерны мигания красным светодиодом и сигналов бузера
+// Паттерны для светодиодов и буззера
 int long_1_ptrn [] = {500, 1000};
 int long_1_arr = 2;
 int long_2_ptrn [] = {500, 200, 500, 1000};
@@ -21,13 +21,11 @@ int short_3_arr = 6;
 int short_4_ptrn [] = {200, 100, 200, 100, 200, 100, 200, 2000};
 int short_4_arr = 8;
 
-
-
 sllib led_r(led_red);
 sllib led_g(led_green);
 sllib buzz(buzzer);
 
-// Создание объектов "Приводы"
+// Приводы
 A4988 mot_CR(mot_CR_steps, mot_CR_dir, mot_CR_step);
 A4988 mot_FR(mot_FR_steps, mot_FR_dir, mot_FR_step);
 A4988 mot_BD(mot_BD_steps, mot_BD_dir, mot_BD_step);
@@ -62,6 +60,7 @@ void setup() {
 
 MillisTimer carr_tim = MillisTimer(2000);
 
+// Проверка состояния всех датчиков
 bool check_all(){
     if (digitalRead(sw_cont) == true && digitalRead(sw_bed_high) == true && digitalRead(sw_bed_low) == false && digitalRead(opt_label) == false && digitalRead(opt_carr) == true){
         return true;
@@ -70,6 +69,7 @@ bool check_all(){
     }
 };
 
+// Инициализация контейнера
 bool cont_init(){
     if (digitalRead(sw_cont) == true){
         led_r.setOffSingle();
@@ -82,6 +82,7 @@ bool cont_init(){
     }
 };
 
+// Инициализация блока протяжки
 bool feeder_init(){
     if (digitalRead(opt_label) == true){
         led_r.patternSingle(long_2_ptrn, long_2_arr);
@@ -94,6 +95,7 @@ bool feeder_init(){
     }
 };
 
+// Инициализация механизма каретки
 bool carr_init(){
     if (digitalRead(opt_carr) == false){
         uint32_t now = millis();
@@ -115,6 +117,7 @@ bool carr_init(){
     }
 };
 
+// Движение каретки на один оборот
 bool carr_move(){
     bool flag = 0; 
     uint32_t now = millis();
@@ -138,6 +141,7 @@ bool carr_move(){
     return false;
 }    
 
+// Инициализация стола
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
         uint32_t now = millis();
@@ -159,21 +163,25 @@ bool bed_init(){
     }
 };
 
+// Движение стола на одну позицию
 bool bed_down(){
     mot_BD.rotate(-20);
     return true;
 }
 
+// Опустить блок протяжки
 bool feeder_down(){
     digitalWrite(coil, HIGH);
     return true;
 }
 
+// Поднять блок протяжки
 bool feeder_up(){
     digitalWrite(coil, LOW);
     return true;
 }
 
+// Движение ролика протяжки
 bool feeder_move(){    
     uint32_t now = millis();
     while (millis() - now < 1000){
@@ -185,14 +193,17 @@ bool feeder_move(){
     return false;
 };
 
+// Включить зелёный светодиод
 void led_g_on(){
     digitalWrite(led_green, HIGH);
 }
 
+// Выключить зелёный светодиод
 void led_g_off(){
     digitalWrite(led_green, LOW);
 }
 
+// Извлечение контейнера
 bool cont_remove(){
     led_g.patternSingle(short_4_ptrn, short_4_arr);
     buzz.patternSingle(short_4_ptrn, short_4_arr);
@@ -204,6 +215,7 @@ bool cont_remove(){
     return false;
 }
 
+// Установка контейнера
 bool cont_insert(){
     led_g.patternSingle(short_2_ptrn, short_2_arr);
     buzz.patternSingle(short_2_ptrn, short_2_arr);
