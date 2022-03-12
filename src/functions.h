@@ -11,3 +11,4 @@ bool feeder_move();
 void led_g_on();
 void led_g_off();
 bool cont_remove();
+bool cont_insert();

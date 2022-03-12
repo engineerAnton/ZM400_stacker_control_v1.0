@@ -14,10 +14,14 @@ int long_3_arr = 6;
 int long_4_ptrn [] = {500, 200, 500, 200, 500, 200, 500, 1000};
 int long_4_arr = 8;
 
-int short_3_ptrn [] = {200, 50, 200, 50, 200, 1000};
+int short_2_ptrn [] = {200, 100, 200, 2000};
+int short_2_arr = 4;
+int short_3_ptrn [] = {200, 100, 200, 100, 200, 2000};
 int short_3_arr = 6;
-int short_4_ptrn [] = {200, 50, 200, 50, 200, 50, 200, 2000};
+int short_4_ptrn [] = {200, 100, 200, 100, 200, 100, 200, 2000};
 int short_4_arr = 8;
+
+
 
 sllib led_r(led_red);
 sllib led_g(led_green);
@@ -53,16 +57,15 @@ void setup() {
   mot_CR.begin(200, 1);
   mot_FR.begin(200, 1);
   mot_BD.begin(200, 1);
+  Serial.println("Power on, initialization start...");
 }
 
 MillisTimer carr_tim = MillisTimer(2000);
 
 bool check_all(){
     if (digitalRead(sw_cont) == true && digitalRead(sw_bed_high) == true && digitalRead(sw_bed_low) == false && digitalRead(opt_label) == false && digitalRead(opt_carr) == true){
-        buzz.patternSingle(long_1_ptrn, long_1_arr);
         return true;
-    }else{
-        buzz.setOffSingle();
+    }else{        
         return false;
     }
 };
@@ -113,24 +116,32 @@ bool carr_init(){
 };
 
 bool carr_move(){
+    bool flag = 0; 
     uint32_t now = millis();
-    while (millis() - now < 1000){   
-        led_g_on();         
-        mot_CR.startMove(1);
-        mot_CR.nextAction();
-        if (digitalRead(opt_carr) == true){
+    while ((millis() - now < 2000)){        
+        if (digitalRead(opt_carr) == true && flag == 0){
+            led_g_on();
+            mot_CR.startMove(1);
+            mot_CR.nextAction();
+        }
+        if (digitalRead(opt_carr) == false){
+            flag = 1;
+            mot_CR.startMove(1);
+            mot_CR.nextAction();
+        }
+        if (digitalRead(opt_carr) == true && flag == 1){
             mot_CR.stop();
             led_g_off();
             return true;
         }
     }
     return false;
-}
+}    
 
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
         uint32_t now = millis();
-        while (millis() - now < 1000){            
+        while (millis() - now < 15000){            
             mot_BD.startMove(1);
             mot_BD.nextAction();
             led_r.patternSingle(long_4_ptrn, long_4_arr);
@@ -191,4 +202,16 @@ bool cont_remove(){
         return true;
     }
     return false;
+}
+
+bool cont_insert(){
+    led_g.patternSingle(short_2_ptrn, short_2_arr);
+    buzz.patternSingle(short_2_ptrn, short_2_arr);
+    if (digitalRead(sw_cont) == true && digitalRead(butt_res) == false){
+        led_g.setOffSingle();
+        buzz.setOffSingle();
+        return true;
+    }else{
+        return false;
+    }
 }
