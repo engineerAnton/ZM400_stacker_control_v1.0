@@ -18,8 +18,8 @@ void loop() {
   Serial.println("reset_btn: " + String(digitalRead(reset_btn)) + "; sw_cont: " + String(digitalRead(sw_cont)) + 
   "; sw_Z_high: " + String(digitalRead(sw_Z_high)) + "; sw_Z_low: " + String(digitalRead(sw_Z_low)) + 
   "; opt_label: " + String(digitalRead(opt_label)) +  "; opt_carr: " + String(digitalRead(opt_carr)));
-
-  if (Serial.available() > 0){
+  */
+  /*if (Serial.available() > 0){
     comm = Serial.read();
     if (comm == '1' && flag_run == 0) {
       flag_run = 1;
@@ -46,8 +46,8 @@ void loop() {
       Serial2.write("~PS");
       Serial.println("Print start");
     }
-  }
-*/
+  }*/
+
   switch (state) {
 
     // 1 Включение, 1 длинный сигнал. Проверка, что стол в верхнем положении, нет этикетки в тракте подачи, каретка в исходном состоянии, контейнер установлен. 
@@ -140,6 +140,14 @@ void loop() {
           state = 13;
         }
       }
+      if (Serial.available() > 0){
+        comm = Serial.read();
+        if (comm == 'n' && flag_run == 0){
+          led_g_off();
+          flag_run = 1;
+          state = 13;
+        }
+      }
       if (digitalRead(sw_cont) == false){
         led_g_off();
         state = 28;
@@ -159,9 +167,8 @@ void loop() {
     // Переход в 17
     case 15:
       Serial.println("Feeder down");
-      if (feeder_down() == true){
+        feeder_down();
         state = 17;
-      }      
       break;
 
     // 17 Протянуть этикетку. Этикетка освободила датчик за t время?
@@ -181,9 +188,8 @@ void loop() {
     // Переход в 21
     case 19:
       Serial.println("Feeder up");
-      if (feeder_up() == true){
+        feeder_up();
         state = 21;
-      }
       break;
 
     // 21 Движение каретки. Каретка отработала за t время?
@@ -202,11 +208,15 @@ void loop() {
     // 23 Контейнер заполнен?
     // Заполнен - переход в 25. Не заполнен - команда продолжить печать, переход 11
     case 23:
-      if (digitalRead(sw_bed_low) == false){
+        flag_run = 0;
+        Serial2.println("~PS");
+        Serial.println("Next label...");
+        state = 11;
+      /*if (digitalRead(sw_bed_low) == false){
         flag_run = 0;
         Serial2.write("~PS");
         state = 11;
-      }
+      }*/
       if (digitalRead(sw_bed_low) == true){
         Serial.println("Container is full!");
         state = 25;

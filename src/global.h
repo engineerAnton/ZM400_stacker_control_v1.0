@@ -24,6 +24,11 @@
 #define mot_CR_en A2
 #define mot_CR_steps 200
 
+#define mot_CR_step A6
+#define mot_CR_dir A7
+#define mot_CR_en A2
+#define mot_CR_steps 200
+
 // Назначение контактов драйвера мотора оси Z
 #define mot_BD_step 46
 #define mot_BD_dir 48

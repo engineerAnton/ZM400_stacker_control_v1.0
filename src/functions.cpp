@@ -170,15 +170,13 @@ bool bed_down(){
 }
 
 // Опустить блок протяжки
-bool feeder_down(){
+void feeder_down(){
     digitalWrite(coil, HIGH);
-    return true;
 }
 
 // Поднять блок протяжки
-bool feeder_up(){
+void feeder_up(){
     digitalWrite(coil, LOW);
-    return true;
 }
 
 // Движение ролика протяжки
