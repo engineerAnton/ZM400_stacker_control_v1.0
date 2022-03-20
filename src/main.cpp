@@ -11,7 +11,6 @@ bool flag_run = 0;
 
 void loop() {
   cutter_out.update();
-  mot_BD_run();
   /*
   //Отладка
   // Состояние элементов управления
@@ -66,7 +65,7 @@ void loop() {
     // Нажатие кнопки - повторное движение, проверка.
     // Успешно - переход в 11. Не упешно - повтор.
     case 3:
-      if (bed_init() == true){
+      /*if (bed_init() == true){
         Serial.println("Bed initialized!");        
         flag_run = 0;       
         state = 11; 
@@ -74,7 +73,8 @@ void loop() {
       if (bed_init() == false){
         Serial.println("Bed error!");
         state = 4;
-      } 
+      } */
+      state = 4;
       break;
     
     // Попытка повторной инициализации стола по нажатию кнопки  
@@ -143,14 +143,14 @@ void loop() {
           state = 13;
         }
       }
-      if (Serial.available() > 0){
+      /*if (Serial.available() > 0){
         comm = Serial.read();
         if (comm == 'n' && flag_run == 0){
           led_g_off();
           flag_run = 1;
           state = 13;
         }
-      }
+      }*/
       if (digitalRead(sw_cont) == false){
         led_g_off();
         state = 28;
@@ -218,6 +218,8 @@ void loop() {
     case 23:        
       if (digitalRead(sw_bed_low) == false){
         flag_run = 0;
+        // Задержка перед отправкой команды на принтер
+        delay(200);
         Serial2.println("~PS");
         state = 11;
       }
