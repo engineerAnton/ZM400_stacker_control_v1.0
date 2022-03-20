@@ -55,6 +55,7 @@ void setup() {
   mot_CR.begin(200, 1);
   mot_FR.begin(200, 1);
   mot_BD.begin(200, 1);
+
   Serial.println("Power on, initialization start...");
 }
 
@@ -165,7 +166,8 @@ bool bed_init(){
 
 // Движение стола на одну позицию
 void bed_down(){
-    mot_BD.rotate(-15);
+    //mot_BD.rotate(-15);
+    mot_BD.startRotate(-15);
 }
 
 // Опустить блок протяжки
@@ -223,4 +225,8 @@ bool cont_insert(){
     }else{
         return false;
     }
+}
+
+void mot_BD_run(){
+     mot_BD.nextAction();
 }

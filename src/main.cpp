@@ -11,7 +11,7 @@ bool flag_run = 0;
 
 void loop() {
   cutter_out.update();
-
+  mot_BD_run();
   /*
   //Отладка
   // Состояние элементов управления
@@ -162,7 +162,9 @@ void loop() {
     case 13:
       Serial.println("Bed 1 pos. down");
       bed_down();
+      Serial.println("Rotate");
       state = 15;
+      
       /*if (bed_down() == true){
         state = 15;
       }*/ 
@@ -177,7 +179,7 @@ void loop() {
       break;
 
     // 17 Протянуть этикетку. Этикетка освободила датчик за t время?
-    // Успешно - переход в 19. Не успешно - переход в 5
+    // Успешно - переход в 19. Не успешно - переход в 7
     case 17:
       Serial.println("Feeder move");
       if (feeder_move() == true){
@@ -216,7 +218,7 @@ void loop() {
     case 23:        
       if (digitalRead(sw_bed_low) == false){
         flag_run = 0;
-        Serial2.print("~PS");
+        Serial2.println("~PS");
         state = 11;
       }
       if (digitalRead(sw_bed_low) == true){

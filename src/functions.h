@@ -5,6 +5,7 @@ bool carr_init();
 bool carr_move();
 bool bed_init();
 void bed_down();
+void mot_BD_run();
 void feeder_up();
 void feeder_down();
 bool feeder_move();
