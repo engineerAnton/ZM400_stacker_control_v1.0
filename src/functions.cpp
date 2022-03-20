@@ -164,9 +164,8 @@ bool bed_init(){
 };
 
 // Движение стола на одну позицию
-bool bed_down(){
-    mot_BD.rotate(-20);
-    return true;
+void bed_down(){
+    mot_BD.rotate(-15);
 }
 
 // Опустить блок протяжки
@@ -183,7 +182,7 @@ void feeder_up(){
 bool feeder_move(){    
     uint32_t now = millis();
     while (millis() - now < 1000){
-        mot_FR.rotate(550);
+        mot_FR.rotate(500);
         if (digitalRead(opt_label) == false){
             return true;
         }

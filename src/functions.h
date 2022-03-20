@@ -4,7 +4,7 @@ bool feeder_init();
 bool carr_init();
 bool carr_move();
 bool bed_init();
-bool bed_down();
+void bed_down();
 void feeder_up();
 void feeder_down();
 bool feeder_move();
