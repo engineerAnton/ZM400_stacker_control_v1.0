@@ -10,7 +10,9 @@ byte state = 1;
 bool flag_run = 0;
 
 void loop() {
+  //mot_BD_update();
   cutter_out.update();
+  leds_buzz_update();
   /*
   //Отладка
   // Состояние элементов управления
@@ -65,16 +67,15 @@ void loop() {
     // Нажатие кнопки - повторное движение, проверка.
     // Успешно - переход в 11. Не упешно - повтор.
     case 3:
-      /*if (bed_init() == true){
+      if (bed_init() == true){
         Serial.println("Bed initialized!");        
         flag_run = 0;       
-        state = 11; 
+        state = 5;
       }
       if (bed_init() == false){
         Serial.println("Bed error!");
         state = 4;
-      } */
-      state = 4;
+      }
       break;
     
     // Попытка повторной инициализации стола по нажатию кнопки  
@@ -83,7 +84,7 @@ void loop() {
         state = 3;
       }
       break; 
-
+    
     // 5 Если контейнер не установлен - 1 длинный красного, 1 длинный сигнал.
     // Успешно - переход в 7. Не успешно - повтор.
     case 5:
@@ -93,7 +94,7 @@ void loop() {
         state = 7;        
       }
       break;
-
+    
     // 7 Если есть этикетка в тракте подачи - 2 длинных мигания красного, 2 длинных сигнала. Нажатие кнопки - повторная проверка
     // Успешно - переход в 9. Не успешно - повтор.
     case 7:
@@ -103,7 +104,7 @@ void loop() {
         state = 9; 
       }
       break;
-
+    
     // 9 Если каретка не в исходном состоянии - попытка провернуть до исходного. Если не получается за t время - 3 длинных мигания красного, 3 длинных сигнала.
     // Нажатие кнопки - повторное движение, проверка.
     // Успешно - переход в 11. Не успешно - переход в 10.
@@ -143,14 +144,14 @@ void loop() {
           state = 13;
         }
       }
-      /*if (Serial.available() > 0){
+      if (Serial.available() > 0){
         comm = Serial.read();
         if (comm == 'n' && flag_run == 0){
           led_g_off();
           flag_run = 1;
           state = 13;
         }
-      }*/
+      }
       if (digitalRead(sw_cont) == false){
         led_g_off();
         state = 28;
@@ -163,19 +164,15 @@ void loop() {
       Serial.println("Bed 1 pos. down");
       bed_down();
       Serial.println("Rotate");
-      state = 15;
-      
-      /*if (bed_down() == true){
-        state = 15;
-      }*/ 
+      state = 15;      
       break;
 
     // 15 Опустить блок протяжки
     // Переход в 17
     case 15:
       Serial.println("Feeder down");
-        feeder_down();
-        state = 17;
+      feeder_down();
+      state = 17;
       break;
 
     // 17 Протянуть этикетку. Этикетка освободила датчик за t время?
@@ -184,8 +181,7 @@ void loop() {
       Serial.println("Feeder move");
       if (feeder_move() == true){
         state = 19;
-      }
-      if (feeder_move() == false){
+      }else{
         feeder_up();
         Serial.println("Feeder fault!");       
         state = 7;

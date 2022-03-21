@@ -39,3 +39,11 @@
 //Управление электромагнитом
 #define coil 10
 
+#if !defined(CLOSE)
+#define CLOSE 1
+#endif // CLOSE
+
+#if !defined(OPEN)
+#define OPEN 0
+#endif // OPEN
+

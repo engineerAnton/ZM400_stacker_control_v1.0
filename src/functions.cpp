@@ -1,8 +1,8 @@
 #include <functions.h>
-#include <A4988.h>
 #include <global.h>
 #include <singleLEDLibrary.h>
 #include <MillisTimer.h>
+#include <AccelStepper.h>
 
 // Паттерны для светодиодов и буззера
 int long_1_ptrn [] = {500, 1000};
@@ -26,12 +26,14 @@ sllib led_g(led_green);
 sllib buzz(buzzer);
 
 // Приводы
-A4988 mot_CR(mot_CR_steps, mot_CR_dir, mot_CR_step);
-A4988 mot_FR(mot_FR_steps, mot_FR_dir, mot_FR_step);
-A4988 mot_BD(mot_BD_steps, mot_BD_dir, mot_BD_step);
+AccelStepper mot_CR(AccelStepper::DRIVER, mot_CR_step, mot_CR_dir);
+AccelStepper mot_FR(AccelStepper::DRIVER, mot_FR_step, mot_FR_dir);
+AccelStepper mot_BD(AccelStepper::DRIVER, mot_BD_step, mot_BD_dir);
+
 
 void setup() {
   Serial.begin(9600);
+  Serial.setTimeout(10);
   Serial2.begin(9600);
   pinMode(cutter_output, INPUT);
   pinMode(mot_CR_en, OUTPUT);
@@ -48,15 +50,37 @@ void setup() {
   pinMode(opt_label, INPUT);
   pinMode(opt_carr, INPUT);
 
-  digitalWrite(mot_CR_en, LOW);
-  digitalWrite(mot_FR_en, LOW);
-  digitalWrite(mot_BD_en, LOW);
-
-  mot_CR.begin(200, 1);
-  mot_FR.begin(200, 1);
-  mot_BD.begin(200, 1);
+  initSteppers();
 
   Serial.println("Power on, initialization start...");
+}
+
+void initSteppers() // Инициализация ШД
+{
+  // Максимальная скорость
+  mot_CR.setMaxSpeed(1000);
+  mot_FR.setMaxSpeed(1000);
+  mot_BD.setMaxSpeed(1000);
+
+  // Установка ускорения
+  mot_CR.setAcceleration(2000.0);
+  mot_FR.setAcceleration(4000.0);
+  mot_BD.setAcceleration(10000.0);
+
+  // Установка пинов для включения питания
+  mot_CR.setEnablePin(mot_CR_en);
+  mot_FR.setEnablePin(mot_FR_en);
+  mot_BD.setEnablePin(mot_BD_en);
+
+  // Установка режима инвертирования для пинов: dir, step, enable
+  mot_CR.setPinsInverted(true, false, true);
+  mot_FR.setPinsInverted(true, false, true);
+  mot_BD.setPinsInverted(true, false, true);
+
+  // Включение подачи питания на моторы
+  mot_CR.enableOutputs();
+  mot_FR.enableOutputs();
+  mot_BD.enableOutputs();
 }
 
 MillisTimer carr_tim = MillisTimer(2000);
@@ -100,9 +124,9 @@ bool feeder_init(){
 bool carr_init(){
     if (digitalRead(opt_carr) == false){
         uint32_t now = millis();
+        mot_CR.setSpeed(-600);
         while (millis() - now < 1000){            
-            mot_CR.startMove(1);
-            mot_CR.nextAction();
+            mot_CR.runSpeed();
             led_r.patternSingle(long_3_ptrn, long_3_arr);
             buzz.patternSingle(long_3_ptrn, long_3_arr);
             if (digitalRead(opt_carr) == true){
@@ -111,7 +135,8 @@ bool carr_init(){
                 buzz.setOffSingle();
                 return true;
             }
-        }        
+        }
+        mot_CR.stop();        
         return false;
     }else{
         return true;
@@ -122,16 +147,15 @@ bool carr_init(){
 bool carr_move(){
     bool flag = 0; 
     uint32_t now = millis();
+    mot_CR.setSpeed(-600);
     while ((millis() - now < 2000)){        
         if (digitalRead(opt_carr) == true && flag == 0){
             led_g_on();
-            mot_CR.startMove(1);
-            mot_CR.nextAction();
+            mot_CR.runSpeed();
         }
         if (digitalRead(opt_carr) == false){
             flag = 1;
-            mot_CR.startMove(1);
-            mot_CR.nextAction();
+            mot_CR.runSpeed();
         }
         if (digitalRead(opt_carr) == true && flag == 1){
             mot_CR.stop();
@@ -139,6 +163,7 @@ bool carr_move(){
             return true;
         }
     }
+    mot_CR.stop();
     return false;
 }    
 
@@ -146,9 +171,9 @@ bool carr_move(){
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
         uint32_t now = millis();
-        while (millis() - now < 15000){            
-            mot_BD.startMove(1);
-            mot_BD.nextAction();
+        mot_BD.setSpeed(-600);
+        while (millis() - now < 10000){            
+            mot_BD.runSpeed();
             led_r.patternSingle(long_4_ptrn, long_4_arr);
             buzz.patternSingle(long_4_ptrn, long_4_arr);
             if (digitalRead(sw_bed_high) == true){
@@ -157,7 +182,8 @@ bool bed_init(){
                 buzz.setOffSingle();
                 return true;
             }
-        }        
+        }
+        mot_BD.stop();        
         return false;
     }else{
         return true;
@@ -166,8 +192,11 @@ bool bed_init(){
 
 // Движение стола на одну позицию
 void bed_down(){
-    //mot_BD.rotate(-15);
-    mot_BD.startRotate(-15);
+    mot_BD.setSpeed(600);
+    mot_BD.move(15);
+    while (mot_BD.currentPosition() < mot_BD.targetPosition()){
+        mot_BD.run();
+    }
 }
 
 // Опустить блок протяжки
@@ -181,14 +210,16 @@ void feeder_up(){
 }
 
 // Движение ролика протяжки
-bool feeder_move(){    
+bool feeder_move(){
     uint32_t now = millis();
-    while (millis() - now < 1000){
-        mot_FR.rotate(500);
-        if (digitalRead(opt_label) == false){
-            return true;
-        }
-    }        
+    mot_FR.setSpeed(-600);
+    while (millis() - now < 800){
+        mot_FR.runSpeed();
+    }
+    mot_FR.stop();     
+    if (digitalRead(opt_label) == false){
+        return true;
+    }      
     return false;
 };
 
@@ -200,6 +231,12 @@ void led_g_on(){
 // Выключить зелёный светодиод
 void led_g_off(){
     digitalWrite(led_green, LOW);
+}
+
+void leds_buzz_update(){
+    led_r.update();
+    led_g.update();
+    buzz.update();
 }
 
 // Извлечение контейнера
@@ -227,6 +264,8 @@ bool cont_insert(){
     }
 }
 
-void mot_BD_run(){
-     mot_BD.nextAction();
+void mot_BD_update(){
+    if (digitalRead(sw_bed_high) == false){
+        mot_BD.runSpeed();
+    }
 }
