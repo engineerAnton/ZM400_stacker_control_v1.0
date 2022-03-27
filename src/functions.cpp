@@ -33,7 +33,7 @@ AccelStepper mot_BD(AccelStepper::DRIVER, mot_BD_step, mot_BD_dir);
 
 void setup() {
   Serial.begin(9600);
-  Serial.setTimeout(10);
+  //Serial.setTimeout(10);
   Serial2.begin(9600);
   pinMode(cutter_output, INPUT);
   pinMode(mot_CR_en, OUTPUT);
@@ -65,7 +65,7 @@ void initSteppers() // Инициализация ШД
   // Установка ускорения
   mot_CR.setAcceleration(2000.0);
   mot_FR.setAcceleration(4000.0);
-  mot_BD.setAcceleration(10000.0);
+  mot_BD.setAcceleration(5000.0);
 
   // Установка пинов для включения питания
   mot_CR.setEnablePin(mot_CR_en);
@@ -144,29 +144,46 @@ bool carr_init(){
 };
 
 // Движение каретки на один оборот
-bool carr_move(){
+/*bool carr_move(){
     bool flag = 0; 
     uint32_t now = millis();
     mot_CR.setSpeed(-600);
     while ((millis() - now < 2000)){        
-        if (digitalRead(opt_carr) == true && flag == 0){
+        if (digitalRead(opt_carr) == true && flag == 0){            
             led_g_on();
             mot_CR.runSpeed();
+            flag = 1;
         }
         if (digitalRead(opt_carr) == false){
-            flag = 1;
             mot_CR.runSpeed();
         }
         if (digitalRead(opt_carr) == true && flag == 1){
-            mot_CR.stop();
             led_g_off();
+            mot_CR.stop();       
             return true;
         }
     }
     mot_CR.stop();
     return false;
-}    
-
+}*/
+bool carr_move(){
+    bool flag = 0; 
+    uint32_t now = millis();
+    mot_CR.setSpeed(-600);
+    while ((millis() - now < 2000)){
+        mot_CR.runSpeed();        
+        if (digitalRead(opt_carr) == false){
+            flag = 1;
+        }
+        if (digitalRead(opt_carr) == true && flag == 1){
+            led_g_off();
+            mot_CR.stop();       
+            return true;
+        }
+    }
+    mot_CR.stop();
+    return false;
+}
 // Инициализация стола
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
@@ -192,11 +209,14 @@ bool bed_init(){
 
 // Движение стола на одну позицию
 void bed_down(){
-    mot_BD.setSpeed(600);
-    mot_BD.move(15);
-    while (mot_BD.currentPosition() < mot_BD.targetPosition()){
+    mot_BD.setSpeed(500);
+    // mot_BD.runToNewPosition(50 - mot_BD.currentPosition());
+    mot_BD.setCurrentPosition(0);
+    mot_BD.moveTo(15);
+    while (mot_BD.currentPosition() != 15){
         mot_BD.run();
     }
+    mot_BD.stop();
 }
 
 // Опустить блок протяжки
@@ -211,7 +231,7 @@ void feeder_up(){
 
 // Движение ролика протяжки
 bool feeder_move(){
-    uint32_t now = millis();
+    /*uint32_t now = millis();
     mot_FR.setSpeed(-600);
     while (millis() - now < 800){
         mot_FR.runSpeed();
@@ -220,7 +240,17 @@ bool feeder_move(){
     if (digitalRead(opt_label) == false){
         return true;
     }      
-    return false;
+    return false;*/
+    mot_FR.setCurrentPosition(0);
+    mot_FR.moveTo(-500);
+    while (mot_FR.currentPosition() != -500){
+        mot_FR.run();
+    }
+    mot_FR.stop();
+    /*if (digitalRead(opt_label) == false){
+        return true;
+    }*/
+    return true;
 };
 
 // Включить зелёный светодиод
@@ -265,7 +295,5 @@ bool cont_insert(){
 }
 
 void mot_BD_update(){
-    if (digitalRead(sw_bed_high) == false){
-        mot_BD.runSpeed();
-    }
+    mot_BD.runSpeed();
 }

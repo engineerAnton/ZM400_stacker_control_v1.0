@@ -16,8 +16,8 @@ void loop() {
   /*
   //Отладка
   // Состояние элементов управления
-  Serial.println("reset_btn: " + String(digitalRead(reset_btn)) + "; sw_cont: " + String(digitalRead(sw_cont)) + 
-  "; sw_Z_high: " + String(digitalRead(sw_Z_high)) + "; sw_Z_low: " + String(digitalRead(sw_Z_low)) + 
+  Serial.println("reset_btn: " + String(digitalRead(butt_res)) + "; sw_cont: " + String(digitalRead(sw_cont)) + 
+  "; sw_Z_high: " + String(digitalRead(sw_bed_high)) + "; sw_Z_low: " + String(digitalRead(sw_bed_low)) + 
   "; opt_label: " + String(digitalRead(opt_label)) +  "; opt_carr: " + String(digitalRead(opt_carr)));
   */
   /*if (Serial.available() > 0){
@@ -91,7 +91,7 @@ void loop() {
       if (cont_init() == true){
         Serial.println("Container inserted!");
         flag_run = 0;
-        state = 7;        
+        state = 9;        
       }
       break;
     
@@ -150,6 +150,14 @@ void loop() {
           led_g_off();
           flag_run = 1;
           state = 13;
+        }
+        if (comm == 'p') {
+          Serial2.print("~PP");
+          Serial.println("Print pause");
+        }
+        if (comm == 's') {
+          Serial2.print("~PS");
+          Serial.println("Print start");
         }
       }
       if (digitalRead(sw_cont) == false){
@@ -212,11 +220,11 @@ void loop() {
     // 23 Контейнер заполнен?
     // Заполнен - переход в 25. Не заполнен - команда продолжить печать, переход 11
     case 23:        
-      if (digitalRead(sw_bed_low) == false){
-        flag_run = 0;
+      if (digitalRead(sw_bed_low) == false){        
         // Задержка перед отправкой команды на принтер
-        delay(200);
-        Serial2.println("~PS");
+        delay(300);
+        Serial2.print("~PS");
+        flag_run = 0;
         state = 11;
       }
       if (digitalRead(sw_bed_low) == true){
@@ -257,5 +265,6 @@ void loop() {
     case 50:
       break;
   }
+
 }
 

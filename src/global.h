@@ -2,12 +2,12 @@
 #define cutter_output 32
 #define led_red A9
 #define butt_res A10
-//#define buzzer 40
-#define buzzer 42
+#define buzzer 40
+//#define buzzer 42
 #define sw_cont 3
 #define sw_bed_high 2
 #define sw_bed_low 18
-#define opt_label 14
+#define opt_label 18
 #define opt_carr 15
 
 // Защита от статики (антидребезг)
@@ -37,7 +37,7 @@
 #define mot_BD_steps 200
 
 //Управление электромагнитом
-#define coil 10
+#define coil 8
 
 #if !defined(CLOSE)
 #define CLOSE 1
