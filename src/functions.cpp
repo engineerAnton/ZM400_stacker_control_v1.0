@@ -107,79 +107,44 @@ bool cont_init(){
     }
 };
 
-// Инициализация блока протяжки
-bool feeder_init(){
-    if (digitalRead(opt_label) == true){
-        led_r.patternSingle(long_2_ptrn, long_2_arr);
-        buzz.patternSingle(long_2_ptrn, long_2_arr);
-        return false;
-    }else{
-        led_r.setOffSingle();
-        buzz.setOffSingle();
-        return true;
-    }
-};
-
 // Инициализация механизма каретки
 bool carr_init(){
     if (digitalRead(opt_carr) == false){
         uint32_t now = millis();
         mot_CR.setSpeed(600);
-        while (millis() - now < 1000){            
-            mot_CR.runSpeed();
-            led_r.patternSingle(long_3_ptrn, long_3_arr);
-            buzz.patternSingle(long_3_ptrn, long_3_arr);
-            if (digitalRead(opt_carr) == true){
-                mot_CR.stop();
-                led_r.setOffSingle();
-                buzz.setOffSingle();
-                return true;
-            }
+
+        if (millis() - now > 2000){
+            mot_CR.stop();
+            return false;
         }
-        mot_CR.stop();        
-        return false;
+        
+        mot_CR.runSpeed();
+        
+        if (digitalRead(opt_carr) == true){
+            mot_CR.stop();
+            
+            return true;
+        }
     }else{
         return true;
     }
 };
 
 // Движение каретки на один оборот
-/*bool carr_move(){
-    bool flag = 0; 
-    uint32_t now = millis();
-    mot_CR.setSpeed(-600);
-    while ((millis() - now < 2000)){        
-        if (digitalRead(opt_carr) == true && flag == 0){            
-            led_g_on();
-            mot_CR.runSpeed();
-            flag = 1;
-        }
-        if (digitalRead(opt_carr) == false){
-            mot_CR.runSpeed();
-        }
-        if (digitalRead(opt_carr) == true && flag == 1){
-            led_g_off();
-            mot_CR.stop();       
-            return true;
-        }
-    }
-    mot_CR.stop();
-    return false;
-}*/
 bool carr_move(){
-    uint32_t previous_time = millis();
+    uint32_t now = millis();
 
     mot_CR.setCurrentPosition(0);
     mot_CR.setSpeed(600);
 
     while (true){
-        mot_CR.runSpeed();        
+        mot_CR.runSpeed();      
         
-        if (millis() - previous_time > 2000){
+        if (millis() - now > 2000){
           mot_CR.stop();
           return false;
         }
-        
+        // Условие для избежания пограничного значения датчика
         if (mot_CR.currentPosition() > 10){
           if (digitalRead(opt_carr) == true){
             mot_CR.stop(); 
@@ -189,15 +154,26 @@ bool carr_move(){
     }
 }
 
+// Индикация состояния аварии
+bool carr_fault(bool fault){
+    if (fault == 1){
+        led_r.patternSingle(long_3_ptrn, long_3_arr);
+        buzz.patternSingle(long_3_ptrn, long_3_arr);
+    }else{
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+    }
+}
+
 // Инициализация стола
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
         uint32_t now = millis();
         mot_BD.setSpeed(-600);
-        while (millis() - now < 10000){            
+        while (millis() - now < 3000){
             mot_BD.runSpeed();
-            led_r.patternSingle(long_4_ptrn, long_4_arr);
-            buzz.patternSingle(long_4_ptrn, long_4_arr);
+            //led_r.patternSingle(long_4_ptrn, long_4_arr);
+            //buzz.patternSingle(long_4_ptrn, long_4_arr);
             if (digitalRead(sw_bed_high) == true){
                 mot_BD.stop();
                 led_r.setOffSingle();
@@ -205,8 +181,8 @@ bool bed_init(){
                 return true;
             }
         }
-        mot_BD.stop();        
-        return false;
+        mot_BD.stop();
+        return false;       
     }else{
         return true;
     }
@@ -223,6 +199,18 @@ void bed_down(){
     }
     mot_BD.stop();
 }
+
+// Инициализация блока протяжки
+bool feeder_init(){
+    if (digitalRead(opt_label) == true){
+        
+        return false;
+    }else{
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+        return true;
+    }
+};
 
 // Опустить блок протяжки
 void feeder_down(){
@@ -252,11 +240,22 @@ bool feeder_move(){
         mot_FR.run();
     }
     mot_FR.stop();
-    /*if (digitalRead(opt_label) == false){
+    if (digitalRead(opt_label) == false){
         return true;
-    }*/
-    return true;
+    }
+    return false;
 };
+
+// Индикация состояния аварии
+bool feeder_fault(bool fault){
+    if (fault == 1){
+        led_r.patternSingle(long_2_ptrn, long_2_arr);
+        buzz.patternSingle(long_2_ptrn, long_2_arr);
+    }else{
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+    }
+}
 
 // Включить зелёный светодиод
 void led_g_on(){
@@ -266,6 +265,16 @@ void led_g_on(){
 // Выключить зелёный светодиод
 void led_g_off(){
     digitalWrite(led_green, LOW);
+}
+
+// Включить зелёный светодиод
+void led_r_on(){
+    digitalWrite(led_red, HIGH);
+}
+
+// Выключить зелёный светодиод
+void led_r_off(){
+    digitalWrite(led_red, LOW);
 }
 
 void leds_buzz_update(){

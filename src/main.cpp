@@ -13,13 +13,13 @@ void loop() {
   //mot_BD_update();
   cutter_out.update();
   leds_buzz_update();
-  /*
+  
   //Отладка
   // Состояние элементов управления
   Serial.println("reset_btn: " + String(digitalRead(butt_res)) + "; sw_cont: " + String(digitalRead(sw_cont)) + 
   "; sw_Z_high: " + String(digitalRead(sw_bed_high)) + "; sw_Z_low: " + String(digitalRead(sw_bed_low)) + 
   "; opt_label: " + String(digitalRead(opt_label)) +  "; opt_carr: " + String(digitalRead(opt_carr)));
-  */
+  
   /*if (Serial.available() > 0){
     comm = Serial.read();
     if (comm == '1' && flag_run == 0) {
@@ -48,7 +48,7 @@ void loop() {
       Serial.println("Print start");
     }
   }*/
-
+/*
   switch (state) {
 
     // 1 Включение, 1 длинный сигнал. Проверка, что стол в верхнем положении, нет этикетки в тракте подачи, каретка в исходном состоянии, контейнер установлен. 
@@ -59,6 +59,8 @@ void loop() {
         state = 11;
       }
       if (check_all() == false){
+        led_r_on();
+        Serial.println("Bed initialization...");
         state = 3;
       }
       break;
@@ -68,30 +70,33 @@ void loop() {
     // Успешно - переход в 11. Не упешно - повтор.
     case 3:
       if (bed_init() == true){
-        Serial.println("Bed initialized!");        
+        Serial.println("Bed initialized!");
+        Serial.println("Please insert an empty container...");
         flag_run = 0;       
         state = 5;
       }
       if (bed_init() == false){
-        Serial.println("Bed error!");
+        Serial.println("Bed fault!");
         state = 4;
       }
       break;
     
     // Попытка повторной инициализации стола по нажатию кнопки  
     case 4:
-      if (digitalRead(butt_res) == false){
+      while (digitalRead(butt_res) == false){
         state = 3;
+             
       }
-      break; 
+      break;
     
     // 5 Если контейнер не установлен - 1 длинный красного, 1 длинный сигнал.
     // Успешно - переход в 7. Не успешно - повтор.
     case 5:
       if (cont_init() == true){
         Serial.println("Container inserted!");
+        Serial.println("Please remove the label from the feeder...");
         flag_run = 0;
-        state = 9;        
+        state = 7;        
       }
       break;
     
@@ -114,17 +119,18 @@ void loop() {
         flag_run = 0;
         state = 11; 
       }
-      if (carr_init() == false){
-        Serial.println("Carriage error!");
+      if (carr_init() == false){        
         state = 10;
       } 
       break;
     
-    // Попытка повторной инициализации каретки по нажатию кнопки  
+    // Попытка повторной инициализации каретки по нажатию кнопки
     case 10:
-      if (digitalRead(butt_res) == true){
-        state = 9;
+      bool fault = 0;
+      Serial.println("Carriage fault!");
+      while (digitalRead(butt_res) == false){
       }
+      state = 9;
       break;     
     
     // Вывод сообщения
@@ -265,6 +271,6 @@ void loop() {
     case 50:
       break;
   }
-
+  */
 }
 
