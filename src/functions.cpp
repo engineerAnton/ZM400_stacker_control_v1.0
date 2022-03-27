@@ -63,7 +63,7 @@ void initSteppers() // Инициализация ШД
   mot_BD.setMaxSpeed(1000);
 
   // Установка ускорения
-  mot_CR.setAcceleration(2000.0);
+  mot_CR.setAcceleration(4000.0);
   mot_FR.setAcceleration(4000.0);
   mot_BD.setAcceleration(5000.0);
 
@@ -124,7 +124,7 @@ bool feeder_init(){
 bool carr_init(){
     if (digitalRead(opt_carr) == false){
         uint32_t now = millis();
-        mot_CR.setSpeed(-600);
+        mot_CR.setSpeed(600);
         while (millis() - now < 1000){            
             mot_CR.runSpeed();
             led_r.patternSingle(long_3_ptrn, long_3_arr);
@@ -167,23 +167,28 @@ bool carr_init(){
     return false;
 }*/
 bool carr_move(){
-    bool flag = 0; 
-    uint32_t now = millis();
-    mot_CR.setSpeed(-600);
-    while ((millis() - now < 2000)){
+    uint32_t previous_time = millis();
+
+    mot_CR.setCurrentPosition(0);
+    mot_CR.setSpeed(600);
+
+    while (true){
         mot_CR.runSpeed();        
-        if (digitalRead(opt_carr) == false){
-            flag = 1;
+        
+        if (millis() - previous_time > 2000){
+          mot_CR.stop();
+          return false;
         }
-        if (digitalRead(opt_carr) == true && flag == 1){
-            led_g_off();
-            mot_CR.stop();       
+        
+        if (mot_CR.currentPosition() > 10){
+          if (digitalRead(opt_carr) == true){
+            mot_CR.stop(); 
             return true;
+          }  
         }
     }
-    mot_CR.stop();
-    return false;
 }
+
 // Инициализация стола
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){

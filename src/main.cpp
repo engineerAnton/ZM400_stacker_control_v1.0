@@ -122,10 +122,10 @@ void loop() {
     
     // Попытка повторной инициализации каретки по нажатию кнопки  
     case 10:
-      if (digitalRead(butt_res) == false){
+      if (digitalRead(butt_res) == true){
         state = 9;
       }
-      break;
+      break;     
     
     // Вывод сообщения
     case 11:
@@ -213,7 +213,7 @@ void loop() {
         state = 23;
       }else{
         Serial.println("Carriage error!");
-        state = 9;
+        state = 10;
       }
       break;
     
