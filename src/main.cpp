@@ -11,7 +11,6 @@ bool flag_run = 0;
 bool debug = 0;
 
 void loop() {
-  //mot_BD_update();
   cutter_out.update();
   leds_buzz_update();
   
@@ -76,7 +75,7 @@ void loop() {
     case 30:
       if (bed_init() == true){
         Serial.println("Bed initialized!");
-        
+        Serial.println("Checking if a container exists...");
         flag_run = 0;       
         state = 50;
       }
@@ -90,8 +89,10 @@ void loop() {
       Serial.println("Bed fault!");
       while (digitalRead(butt_res) == true){
         // indication
+        bed_fault(true);
       }
       Serial.println("Bed initialization...");
+      bed_fault(false);
       state = 30;
       break;
     
@@ -100,18 +101,23 @@ void loop() {
     case 50:
       if (cont_init() == true){
         Serial.println("Container inserted!");
-        
+        Serial.println("Feeder initialization...");
         flag_run = 0;
         state = 70;        
       }else{
         state = 55;
       }
       break;
+    
+    // Просьба установить пустой контейнер
     case 55:
       Serial.println("Please insert an empty container...");
       while (digitalRead(sw_cont) == false){
         //indication
+        cont_fault(true);
       }
+      Serial.println("Checking if a container exists...");
+      cont_fault(false);
       state = 50;
       break;
     
@@ -132,7 +138,10 @@ void loop() {
       Serial.println("Please remove the label from the feeder...");
       while (digitalRead(opt_label) == true){
         // indication
+        feeder_fault(true);
       }
+      Serial.println("Feeder initialization...");
+      feeder_fault(false);
       state = 70;
       break;
     
@@ -157,8 +166,10 @@ void loop() {
       Serial.println("Carriage fault!");
       while (digitalRead(butt_res) == true){
         //indication
+        carr_fault(true);
       }
       Serial.println("Carriage initialization...");
+      carr_fault(false);
       state = 90;
       break;     
 
@@ -167,7 +178,6 @@ void loop() {
     case 120:      
       if (cutter_out.edge()){
         if (cutter_out.falling() && flag_run == 0){
-          led_g_off();
           flag_run = 1;
           state = 130;
         }
@@ -175,7 +185,6 @@ void loop() {
       if (Serial.available() > 0){
         comm = Serial.read();
         if (comm == 'n' && flag_run == 0){
-          led_g_off();
           flag_run = 1;
           state = 130;
         }
@@ -189,7 +198,6 @@ void loop() {
         }
       }
       if (digitalRead(sw_cont) == false){
-        led_g_off();
         state = 280;
       }
       break;
@@ -218,6 +226,7 @@ void loop() {
         state = 190;
       }else{
         feeder_up();
+        led_g_off();
         Serial.println("Feeder fault!");       
         state = 70;
       }
@@ -239,7 +248,8 @@ void loop() {
         Serial.println("Done!");
         state = 230;
       }else{
-        Serial.println("Carriage error!");
+        led_g_off();
+        Serial.println("Carriage fault!");
         state = 100;
       }
       break;
@@ -252,9 +262,11 @@ void loop() {
         delay(300);
         Serial2.print("~PS");
         flag_run = 0;
+        Serial.println("Waiting for a signal from the printer...");
         state = 120;
       }
       if (digitalRead(sw_bed_low) == true){
+        led_g_off();
         Serial.println("Container is full!");
         state = 250;
       }
@@ -269,15 +281,17 @@ void loop() {
 
     case 260:  
       if (cont_remove() == true){
-        state = 280;
+        state = 300;
       }
       break;
 
     // 30 Ожидание установки.
     // Если установлен и нажата кнопка - переход 33
     case 280:
-      Serial.println("Please insert an empty container");
-      state = 300;
+      if (digitalRead(butt_res) == true){
+        Serial.println("Please insert an empty container");
+        state = 300;
+      }      
       break;
 
     // 30 Ожидание установки.
