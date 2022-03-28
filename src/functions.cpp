@@ -113,6 +113,7 @@ bool cont_fault(bool fault){
         led_r.setOffSingle();
         buzz.setOffSingle();
     }
+    return true;
 }
 
 // Инициализация механизма каретки
@@ -168,6 +169,7 @@ bool carr_fault(bool fault){
         led_r.setOffSingle();
         buzz.setOffSingle();
     }
+    return true;
 }
 
 // Инициализация стола
@@ -214,6 +216,7 @@ bool bed_fault(bool fault){
         led_r.setOffSingle();
         buzz.setOffSingle();
     }
+    return true;
 }
 
 // Инициализация блока протяжки
@@ -258,6 +261,7 @@ bool feeder_fault(bool fault){
         led_r.setOffSingle();
         buzz.setOffSingle();
     }
+    return true;
 }
 
 // Включить зелёный светодиод
