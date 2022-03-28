@@ -6,7 +6,7 @@
 Debouncer cutter_out(cutter_output, duration_ms);
 
 int comm = 0;
-byte state = 1;
+int state = 10;
 bool flag_run = 0;
 
 void loop() {
@@ -48,106 +48,105 @@ void loop() {
       Serial.println("Print start");
     }
   }*/
-/*
+
   switch (state) {
 
     // 1 Включение, 1 длинный сигнал. Проверка, что стол в верхнем положении, нет этикетки в тракте подачи, каретка в исходном состоянии, контейнер установлен. 
     // Успешно - переход в 11. Не успешно - переход в 3.
-    case 1:
+    case 10:
       if (check_all() == true){
         Serial.println("System initialized!");
-        state = 11;
+        state = 110;
       }
       if (check_all() == false){
         led_r_on();
         Serial.println("Bed initialization...");
-        state = 3;
+        state = 30;
       }
       break;
     
     // 3 Если стол не в верхнем положении - движение стола вверх до концевика. Если стол не вернулся в начальное положение за t время - 4 длинных мигания красного, 4 длинных сигнала.
     // Нажатие кнопки - повторное движение, проверка.
     // Успешно - переход в 11. Не упешно - повтор.
-    case 3:
+    case 30:
       if (bed_init() == true){
         Serial.println("Bed initialized!");
         Serial.println("Please insert an empty container...");
         flag_run = 0;       
-        state = 5;
+        state = 50;
       }
-      if (bed_init() == false){
-        Serial.println("Bed fault!");
-        state = 4;
+      if (bed_init() == false){        
+        state = 40;
       }
       break;
     
     // Попытка повторной инициализации стола по нажатию кнопки  
-    case 4:
+    case 40:
+      Serial.println("Bed fault!");
       while (digitalRead(butt_res) == false){
-        state = 3;
-             
+        // indication
       }
+      state = 30;
       break;
     
     // 5 Если контейнер не установлен - 1 длинный красного, 1 длинный сигнал.
     // Успешно - переход в 7. Не успешно - повтор.
-    case 5:
+    case 50:
       if (cont_init() == true){
         Serial.println("Container inserted!");
         Serial.println("Please remove the label from the feeder...");
         flag_run = 0;
-        state = 7;        
+        state = 70;        
       }
       break;
     
     // 7 Если есть этикетка в тракте подачи - 2 длинных мигания красного, 2 длинных сигнала. Нажатие кнопки - повторная проверка
     // Успешно - переход в 9. Не успешно - повтор.
-    case 7:
+    case 70:
       if (feeder_init() == true){
         Serial.println("Feeder initialized!");
+        Serial.println("Carriage initialization...");
         flag_run = 0;
-        state = 9; 
+        state = 90; 
       }
       break;
     
     // 9 Если каретка не в исходном состоянии - попытка провернуть до исходного. Если не получается за t время - 3 длинных мигания красного, 3 длинных сигнала.
     // Нажатие кнопки - повторное движение, проверка.
     // Успешно - переход в 11. Не успешно - переход в 10.
-    case 9:
+    case 90:
       if (carr_init() == true){
         Serial.println("Carriage initialized!");
+        led_r_off();
+        led_g_on();
+        Serial.println("Waiting for a signal from the printer...");
         flag_run = 0;
-        state = 11; 
+        state = 120; 
       }
       if (carr_init() == false){        
-        state = 10;
+        state = 100;
       } 
       break;
     
     // Попытка повторной инициализации каретки по нажатию кнопки
-    case 10:
+    case 100:
       bool fault = 0;
       Serial.println("Carriage fault!");
       while (digitalRead(butt_res) == false){
+        //indication
       }
-      state = 9;
+      state = 90;
       break;     
-    
-    // Вывод сообщения
-    case 11:
-      Serial.println("Waiting for a signal from the printer...");
-      state = 12;
-      break;
 
     // 12 Состояние готовности к работе. Свечение зелёного. Однократно 3 коротких сигнала. Ожидание сигнала с принтера.
     // Сигнал с принтера - переход в 13
-    case 12:
-      led_g_on();
+    case 120:
+      
       if (cutter_out.edge()){
         if (cutter_out.falling() && flag_run == 0){
           led_g_off();
           flag_run = 1;
-          state = 13;
+          state = 130;
         }
       }
       if (Serial.available() > 0){
@@ -155,7 +154,7 @@ void loop() {
         if (comm == 'n' && flag_run == 0){
           led_g_off();
           flag_run = 1;
-          state = 13;
+          state = 130;
         }
         if (comm == 'p') {
           Serial2.print("~PP");
@@ -168,109 +167,107 @@ void loop() {
       }
       if (digitalRead(sw_cont) == false){
         led_g_off();
-        state = 28;
+        state = 280;
       }
       break;
 
     // 13 Движение стола на 1 поз. вниз.
     // Переход в 15
-    case 13:
+    case 130:
       Serial.println("Bed 1 pos. down");
       bed_down();
-      Serial.println("Rotate");
-      state = 15;      
+      state = 150;      
       break;
 
     // 15 Опустить блок протяжки
     // Переход в 17
-    case 15:
+    case 150:
       Serial.println("Feeder down");
       feeder_down();
-      state = 17;
+      state = 170;
       break;
 
     // 17 Протянуть этикетку. Этикетка освободила датчик за t время?
     // Успешно - переход в 19. Не успешно - переход в 7
-    case 17:
+    case 170:
       Serial.println("Feeder move");
       if (feeder_move() == true){
-        state = 19;
+        state = 190;
       }else{
         feeder_up();
         Serial.println("Feeder fault!");       
-        state = 7;
+        state = 70;
       }
       break;
 
     // 19 Поднять блок протяжки
     // Переход в 21
-    case 19:
+    case 190:
       Serial.println("Feeder up");
         feeder_up();
-        state = 21;
+        state = 210;
       break;
 
     // 21 Движение каретки. Каретка отработала за t время?
     // Успешно - переход в 23. Не успешно - переход в 7
-    case 21:
+    case 210:
       Serial.println("Carriage move");
       if (carr_move() == true){
         Serial.println("Done!");
-        state = 23;
+        state = 230;
       }else{
         Serial.println("Carriage error!");
-        state = 10;
+        state = 100;
       }
       break;
     
     // 23 Контейнер заполнен?
     // Заполнен - переход в 25. Не заполнен - команда продолжить печать, переход 11
-    case 23:        
+    case 230:        
       if (digitalRead(sw_bed_low) == false){        
         // Задержка перед отправкой команды на принтер
         delay(300);
         Serial2.print("~PS");
         flag_run = 0;
-        state = 11;
+        state = 120;
       }
       if (digitalRead(sw_bed_low) == true){
         Serial.println("Container is full!");
-        state = 25;
+        state = 250;
       }
       break;
 
     // 25 Ожидание извлечение полного контейнера. 4 коротких мигания красного, 4 коротких сигнала
     // Извлечён - ждать
-    case 25:
+    case 250:
       Serial.println("Please remove the container");
-      state = 26;
+      state = 260;
       break;
 
-    case 26:  
+    case 260:  
       if (cont_remove() == true){
-        state = 28;
+        state = 280;
       }
       break;
 
     // 30 Ожидание установки.
     // Если установлен и нажата кнопка - переход 33
-    case 28:
+    case 280:
       Serial.println("Please insert an empty container");
-      state = 30;
+      state = 300;
       break;
 
     // 30 Ожидание установки.
     // Если установлен и нажата кнопка - переход 33
-    case 30:  
+    case 300:  
       if (cont_insert() == true){
         Serial.println("Container inserted");
-        state = 3;
+        state = 30;
       }
       
     // 50 Состояние аварии
-    case 50:
+    case 500:
       break;
   }
-  */
 }
 
