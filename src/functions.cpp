@@ -83,7 +83,7 @@ void initSteppers() // Инициализация ШД
   mot_BD.enableOutputs();
 }
 
-MillisTimer carr_tim = MillisTimer(2000);
+// MillisTimer carr_tim = MillisTimer(2000);
 
 // Проверка состояния всех датчиков
 bool check_all(){
@@ -112,19 +112,15 @@ bool carr_init(){
     if (digitalRead(opt_carr) == false){
         uint32_t now = millis();
         mot_CR.setSpeed(600);
-
-        if (millis() - now > 2000){
-            mot_CR.stop();
-            return false;
+        while (millis() - now < 2000){
+            mot_CR.runSpeed();        
+            if (digitalRead(opt_carr) == true){
+                mot_CR.stop();            
+                return true;
+            }
         }
-        
-        mot_CR.runSpeed();
-        
-        if (digitalRead(opt_carr) == true){
-            mot_CR.stop();
-            
-            return true;
-        }
+        mot_CR.stop();
+        return false;        
     }else{
         return true;
     }
@@ -202,12 +198,9 @@ void bed_down(){
 
 // Инициализация блока протяжки
 bool feeder_init(){
-    if (digitalRead(opt_label) == true){
-        
+    if (digitalRead(opt_label) == true){        
         return false;
     }else{
-        led_r.setOffSingle();
-        buzz.setOffSingle();
         return true;
     }
 };

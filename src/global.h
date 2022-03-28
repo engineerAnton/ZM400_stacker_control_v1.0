@@ -7,7 +7,7 @@
 #define sw_cont 3
 #define sw_bed_high 2
 #define sw_bed_low 18
-#define opt_label 18
+#define opt_label 14
 #define opt_carr 15
 
 // Защита от статики (антидребезг)
