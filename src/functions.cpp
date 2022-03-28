@@ -97,15 +97,23 @@ bool check_all(){
 // Инициализация контейнера
 bool cont_init(){
     if (digitalRead(sw_cont) == true){
-        led_r.setOffSingle();
-        buzz.setOffSingle();
         return true;   
     }else{
-        led_r.patternSingle(long_1_ptrn, long_1_arr);
-        buzz.patternSingle(long_1_ptrn, long_1_arr);
         return false;
     }
 };
+
+// Индикация состояния аварии каретки
+bool cont_fault(bool fault){
+    if (fault == 1){
+        led_r.patternSingle(long_1_ptrn, long_1_arr);
+        buzz.patternSingle(long_1_ptrn, long_1_arr);
+        return fault;
+    }else{
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+    }
+}
 
 // Инициализация механизма каретки
 bool carr_init(){
@@ -150,11 +158,12 @@ bool carr_move(){
     }
 }
 
-// Индикация состояния аварии
+// Индикация состояния аварии каретки
 bool carr_fault(bool fault){
     if (fault == 1){
         led_r.patternSingle(long_3_ptrn, long_3_arr);
         buzz.patternSingle(long_3_ptrn, long_3_arr);
+        return fault;
     }else{
         led_r.setOffSingle();
         buzz.setOffSingle();
@@ -196,6 +205,17 @@ void bed_down(){
     mot_BD.stop();
 }
 
+// Индикация состояния аварии стола
+bool bed_fault(bool fault){
+    if (fault == 1){
+        led_r.patternSingle(long_4_ptrn, long_4_arr);
+        buzz.patternSingle(long_4_ptrn, long_4_arr);
+    }else{
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+    }
+}
+
 // Инициализация блока протяжки
 bool feeder_init(){
     if (digitalRead(opt_label) == true){        
@@ -217,16 +237,6 @@ void feeder_up(){
 
 // Движение ролика протяжки
 bool feeder_move(){
-    /*uint32_t now = millis();
-    mot_FR.setSpeed(-600);
-    while (millis() - now < 800){
-        mot_FR.runSpeed();
-    }
-    mot_FR.stop();     
-    if (digitalRead(opt_label) == false){
-        return true;
-    }      
-    return false;*/
     mot_FR.setCurrentPosition(0);
     mot_FR.moveTo(-500);
     while (mot_FR.currentPosition() != -500){
@@ -239,7 +249,7 @@ bool feeder_move(){
     return false;
 };
 
-// Индикация состояния аварии
+// Индикация состояния аварии механизма подачи
 bool feeder_fault(bool fault){
     if (fault == 1){
         led_r.patternSingle(long_2_ptrn, long_2_arr);
@@ -299,8 +309,4 @@ bool cont_insert(){
     }else{
         return false;
     }
-}
-
-void mot_BD_update(){
-    mot_BD.runSpeed();
 }
