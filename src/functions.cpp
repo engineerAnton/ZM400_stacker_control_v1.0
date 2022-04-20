@@ -5,8 +5,6 @@
 #include <AccelStepper.h>
 
 // Паттерны для светодиодов и буззера
-int long_1_ptrn [] = {500, 1000};
-int long_1_arr = 2;
 int long_2_ptrn [] = {500, 200, 500, 1000};
 int long_2_arr = 4;
 int long_3_ptrn [] = {500, 200, 500, 200, 500, 1000};
@@ -51,8 +49,9 @@ void setup() {
   pinMode(opt_carr, INPUT);
 
   initSteppers();
+  digitalWrite(coil, LOW);
 
-  Serial.println("Power on, initialization start...");
+  Serial.println("Power on, please press button");
 }
 
 void initSteppers() // Инициализация ШД
@@ -103,14 +102,14 @@ bool cont_init(){
     }
 };
 
-// Индикация состояния аварии каретки
+// Не установлен контейнер
 bool cont_fault(bool fault){
     if (fault == 1){
-        led_r.patternSingle(long_1_ptrn, long_1_arr);
-        buzz.patternSingle(long_1_ptrn, long_1_arr);
+        led_g.patternSingle(short_2_ptrn, short_2_arr);
+        buzz.patternSingle(short_2_ptrn, short_2_arr);
         return fault;
     }else{
-        led_r.setOffSingle();
+        led_g.setOffSingle();
         buzz.setOffSingle();
     }
     return true;
@@ -119,15 +118,18 @@ bool cont_fault(bool fault){
 // Инициализация механизма каретки
 bool carr_init(){
     if (digitalRead(opt_carr) == false){
+        led_r_on();
         uint32_t now = millis();
         mot_CR.setSpeed(600);
         while (millis() - now < 2000){
             mot_CR.runSpeed();        
             if (digitalRead(opt_carr) == true){
+                led_r_off();
                 mot_CR.stop();            
                 return true;
             }
         }
+        led_r_off();
         mot_CR.stop();
         return false;        
     }else{
@@ -142,21 +144,18 @@ bool carr_move(){
     mot_CR.setCurrentPosition(0);
     mot_CR.setSpeed(600);
 
-    while (true){
-        mot_CR.runSpeed();      
-        
-        if (millis() - now > 2000){
-          mot_CR.stop();
-          return false;
-        }
+    while (millis() - now < 4000){
+        mot_CR.runSpeed();
         // Условие для избежания пограничного значения датчика
         if (mot_CR.currentPosition() > 10){
           if (digitalRead(opt_carr) == true){
             mot_CR.stop(); 
             return true;
-          }  
+          } 
         }
     }
+    mot_CR.stop();
+    return false;    
 }
 
 // Индикация состояния аварии каретки
@@ -175,19 +174,18 @@ bool carr_fault(bool fault){
 // Инициализация стола
 bool bed_init(){
     if (digitalRead(sw_bed_high) == false){
+        led_r_on();
         uint32_t now = millis();
         mot_BD.setSpeed(-600);
-        while (millis() - now < 3000){
+        while (millis() - now < 25000){
             mot_BD.runSpeed();
-            //led_r.patternSingle(long_4_ptrn, long_4_arr);
-            //buzz.patternSingle(long_4_ptrn, long_4_arr);
             if (digitalRead(sw_bed_high) == true){
+                led_r_off();
                 mot_BD.stop();
-                led_r.setOffSingle();
-                buzz.setOffSingle();
                 return true;
             }
         }
+        led_r_off();
         mot_BD.stop();
         return false;       
     }else{
@@ -200,7 +198,7 @@ void bed_down(){
     mot_BD.setSpeed(500);
     // mot_BD.runToNewPosition(50 - mot_BD.currentPosition());
     mot_BD.setCurrentPosition(0);
-    mot_BD.moveTo(15);
+    mot_BD.moveTo(25);
     while (mot_BD.currentPosition() != 15){
         mot_BD.run();
     }
@@ -241,15 +239,16 @@ void feeder_up(){
 // Движение ролика протяжки
 bool feeder_move(){
     mot_FR.setCurrentPosition(0);
-    mot_FR.moveTo(-500);
-    while (mot_FR.currentPosition() != -500){
+    mot_FR.moveTo(-350);
+    while (mot_FR.currentPosition() != -350){
         mot_FR.run();
     }
     mot_FR.stop();
     if (digitalRead(opt_label) == false){
         return true;
-    }
-    return false;
+    }else{
+        return false;    
+    }  
 };
 
 // Индикация состояния аварии механизма подачи
@@ -263,6 +262,21 @@ bool feeder_fault(bool fault){
     }
     return true;
 }
+
+// Старт
+bool start(bool start){
+    if (start == 1){
+        led_g.patternSingle(short_3_ptrn, short_3_arr);
+        led_r.patternSingle(short_3_ptrn, short_3_arr);
+        buzz.patternSingle(short_3_ptrn, short_3_arr);
+    }else{
+        led_g.setOffSingle();
+        led_r.setOffSingle();
+        buzz.setOffSingle();
+    }
+    return true;
+}
+
 
 // Включить зелёный светодиод
 void led_g_on(){
@@ -291,15 +305,16 @@ void leds_buzz_update(){
 }
 
 // Извлечение контейнера
-bool cont_remove(){
-    led_g.patternSingle(short_4_ptrn, short_4_arr);
-    buzz.patternSingle(short_4_ptrn, short_4_arr);
+bool cont_full(){
+    led_g.patternSingle(short_3_ptrn, short_3_arr);
+    buzz.patternSingle(short_3_ptrn, short_3_arr);
     if (digitalRead(sw_cont) == false){
         led_g.setOffSingle();
         buzz.setOffSingle();
         return true;
-    }
-    return false;
+    }else{
+        return false;
+    }    
 }
 
 // Установка контейнера
