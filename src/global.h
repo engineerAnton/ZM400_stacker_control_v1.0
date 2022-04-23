@@ -3,6 +3,7 @@
 #define led_red A9          // AUX2.4
 #define butt_res A10        // AUX2.5
 #define buzzer 40           // AUX2.6
+#define pause_butt  44
 //#define buzzer 42
 #define sw_cont 3           // X-
 #define sw_bed_high 2       // X+

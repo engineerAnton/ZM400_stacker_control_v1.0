@@ -32,7 +32,7 @@ AccelStepper mot_BD(AccelStepper::DRIVER, mot_BD_step, mot_BD_dir);
 void setup() {
   Serial.begin(9600);
   //Serial.setTimeout(10);
-  Serial2.begin(9600);
+  //Serial2.begin(9600);
   pinMode(cutter_output, INPUT);
   pinMode(mot_CR_en, OUTPUT);
   pinMode(mot_FR_en, OUTPUT);
@@ -42,6 +42,7 @@ void setup() {
   pinMode(led_red, OUTPUT);
   pinMode(butt_res, INPUT);
   pinMode(buzzer, OUTPUT);
+  pinMode(pause_butt, OUTPUT);
   pinMode(sw_cont, INPUT);
   pinMode(sw_bed_high, INPUT);
   pinMode(sw_bed_low, INPUT);
@@ -50,6 +51,7 @@ void setup() {
 
   initSteppers();
   digitalWrite(coil, LOW);
+  digitalWrite(pause_butt, LOW);
 
   Serial.println("Power on, please press button");
 }

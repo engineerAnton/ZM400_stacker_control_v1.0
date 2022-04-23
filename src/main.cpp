@@ -160,7 +160,7 @@ void loop() {
     case 120:      
       if (cutter_out.edge()){
         if (cutter_out.falling() && flag_run == 0){
-          flag_run = 1;
+          flag_run = 1;          
           state = 130;
         }
       }
@@ -171,13 +171,19 @@ void loop() {
           state = 130;
         }
         if (comm == 'p') {
-          Serial2.print("~PP");
-          Serial.println("Print pause");
+          digitalWrite(pause_butt, HIGH);
+          delay(100);
+          digitalWrite(pause_butt, LOW);
+          Serial.println("PAUSE button");
+        }
+        /*if (comm == 'o') {
+          Serial2.println("~PP");
+          Serial.println("Print pause o");
         }
         if (comm == 's') {
-          Serial2.print("~PS");
+          Serial2.println("~PS");
           Serial.println("Print start");
-        }
+        }*/
       }
       if (digitalRead(sw_cont) == false){
         state = 280;
@@ -240,9 +246,10 @@ void loop() {
     // Заполнен - переход в 260. Не заполнен - команда продолжить печать, переход 120
     case 230:        
       if (digitalRead(sw_bed_low) == false){        
-        // Задержка перед отправкой команды на принтер
-        delay(300);
-        Serial2.print("~PS");
+        // Имитация нажатия кнопки "PAUSE"
+        digitalWrite(pause_butt, HIGH);
+        delay(100);
+        digitalWrite(pause_butt, LOW);
         flag_run = 0;
         Serial.println("Waiting for a signal from the printer...");
         state = 120;
