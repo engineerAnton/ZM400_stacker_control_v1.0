@@ -4,14 +4,18 @@
 #include <functions.h>
 
 Debouncer cutter_out(cutter_output, duration_ms);
+Debouncer pause(butt_res, duration_ms);
 
 int comm = 0;
 int state = 5;
 bool flag_run = 0;
+bool flag_pause = 1;
+bool flag_pause_butt = 0;
 bool debug = 0;
 
 void loop() {
   cutter_out.update();
+  pause.update();
   leds_buzz_update();
   
   if (debug){
@@ -22,6 +26,25 @@ void loop() {
   "; opt_label: " + String(digitalRead(opt_label)) +  "; opt_carr: " + String(digitalRead(opt_carr)));
     
   }else{
+  
+  // Постановка и снятие печати с паузы
+  if (pause.edge()){
+    if (pause.falling()){     
+      flag_pause = !flag_pause;
+              
+      if (flag_pause == 1){
+        Serial.println("Pause print");
+      }else{
+        Serial.println("Resuming printing");
+        pause_mode(false);
+        led_g_on();
+      }
+    }
+  }
+  if (flag_pause == 1){
+    pause_mode(true);
+  }
+  
   switch (state) {
     case 5:    
       while (digitalRead(butt_res) == true){
@@ -245,7 +268,7 @@ void loop() {
     // 230 Контейнер заполнен?
     // Заполнен - переход в 260. Не заполнен - команда продолжить печать, переход 120
     case 230:        
-      if (digitalRead(sw_bed_low) == false){        
+      if (digitalRead(sw_bed_low) == false && flag_pause == 0){        
         // Имитация нажатия кнопки "PAUSE"
         digitalWrite(pause_butt, HIGH);
         delay(100);

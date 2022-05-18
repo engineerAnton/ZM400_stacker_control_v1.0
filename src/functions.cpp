@@ -78,9 +78,9 @@ void initSteppers() // Инициализация ШД
   mot_FR.setPinsInverted(true, false, true);
   mot_BD.setPinsInverted(true, false, true);
 
-  // Включение подачи питания на моторы
+  // Подачи питания на моторы
   mot_CR.enableOutputs();
-  mot_FR.enableOutputs();
+  //mot_FR.enableOutputs();
   mot_BD.enableOutputs();
 }
 
@@ -197,12 +197,12 @@ bool bed_init(){
 
 // Движение стола на одну позицию
 void bed_down(){
-    mot_BD.setSpeed(500);
-    // mot_BD.runToNewPosition(50 - mot_BD.currentPosition());
-    mot_BD.setCurrentPosition(0);
-    mot_BD.moveTo(25);
+    mot_BD.setCurrentPosition(0);    
+    // mot_BD.runToNewPosition(50 - mot_BD.currentPosition());    
+    mot_BD.moveTo(15);
     while (mot_BD.currentPosition() != 15){
-        mot_BD.run();
+        mot_BD.setSpeed(600);
+        mot_BD.runSpeed();
     }
     mot_BD.stop();
 }
@@ -240,12 +240,14 @@ void feeder_up(){
 
 // Движение ролика протяжки
 bool feeder_move(){
+    mot_FR.enableOutputs();
     mot_FR.setCurrentPosition(0);
     mot_FR.moveTo(-350);
     while (mot_FR.currentPosition() != -350){
         mot_FR.run();
     }
     mot_FR.stop();
+    mot_FR.disableOutputs();
     if (digitalRead(opt_label) == false){
         return true;
     }else{
@@ -330,4 +332,14 @@ bool cont_insert(){
     }else{
         return false;
     }
+}
+
+// Режим паузы
+bool pause_mode(bool pause){
+    if (pause == 1){
+        led_g.setBreathSingle(300);
+    }else{
+        led_g.setOffSingle();
+    }
+    return true;
 }

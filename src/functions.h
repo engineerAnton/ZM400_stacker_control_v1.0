@@ -21,3 +21,4 @@ void leds_buzz_update();
 bool cont_full();
 bool cont_insert();
 void initSteppers();
+bool pause_mode(bool pause);
