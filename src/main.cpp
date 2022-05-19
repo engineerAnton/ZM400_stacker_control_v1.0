@@ -10,8 +10,27 @@ int comm = 0;
 int state = 5;
 bool flag_run = 0;
 bool flag_pause = 1;
-bool flag_pause_butt = 0;
 bool debug = 0;
+
+// Функция постановки и снятия печати с паузы
+void pause_func(){
+  if (pause.edge()){
+    if (pause.falling()){     
+      flag_pause = !flag_pause;
+              
+      if (flag_pause == 1){
+        Serial.println("Pause printing");
+      }else{
+        Serial.println("Resuming printing");
+        pause_mode(false);
+        led_g_on();
+      }
+    }
+  }
+  if (flag_pause == 1){
+    pause_mode(true);
+  }
+}
 
 void loop() {
   cutter_out.update();
@@ -25,26 +44,7 @@ void loop() {
   "; sw_Z_high: " + String(digitalRead(sw_bed_high)) + "; sw_Z_low: " + String(digitalRead(sw_bed_low)) + 
   "; opt_label: " + String(digitalRead(opt_label)) +  "; opt_carr: " + String(digitalRead(opt_carr)));
     
-  }else{
-  
-  // Постановка и снятие печати с паузы
-  if (pause.edge()){
-    if (pause.falling()){     
-      flag_pause = !flag_pause;
-              
-      if (flag_pause == 1){
-        Serial.println("Pause print");
-      }else{
-        Serial.println("Resuming printing");
-        pause_mode(false);
-        led_g_on();
-      }
-    }
-  }
-  if (flag_pause == 1){
-    pause_mode(true);
-  }
-  
+  }else{  
   switch (state) {
     case 5:    
       while (digitalRead(butt_res) == true){
@@ -180,7 +180,8 @@ void loop() {
 
     // 120 Состояние готовности к работе. Ожидание сигнала с принтера и отслеживание момента изъятия контейнера.
     // Сигнал с принтера - переход в 130
-    case 120:      
+    case 120:
+      pause_func();    
       if (cutter_out.edge()){
         if (cutter_out.falling() && flag_run == 0){
           flag_run = 1;          
@@ -216,6 +217,7 @@ void loop() {
     // 130 Движение стола на 1 поз. вниз.
     // Переход в 150
     case 130:
+      pause_func();
       Serial.println("Bed 1 pos. down");
       bed_down();
       state = 150;      
@@ -224,6 +226,7 @@ void loop() {
     // 150 Опустить блок протяжки
     // Переход в 170
     case 150:
+      pause_func();
       Serial.println("Feeder down");
       feeder_down();
       state = 170;
@@ -232,6 +235,7 @@ void loop() {
     // 170 Протянуть этикетку. Этикетка освободила датчик за t время?
     // Успешно - переход в 190. Не успешно - переход в 70
     case 170:
+      pause_func();
       Serial.println("Feeder move");
       if (feeder_move() == true){
         state = 190;
@@ -246,6 +250,7 @@ void loop() {
     // 190 Поднять блок протяжки
     // Переход в 210
     case 190:
+      pause_func();
       Serial.println("Feeder up");
         feeder_up();
         state = 210;
@@ -254,6 +259,7 @@ void loop() {
     // 210 Движение каретки. Каретка отработала за t время?
     // Успешно - переход в 230. Не успешно - переход в 100
     case 210:
+      pause_func();
       Serial.println("Carriage move");
       if (carr_move() == true){
         Serial.println("Done!");
@@ -267,7 +273,8 @@ void loop() {
     
     // 230 Контейнер заполнен?
     // Заполнен - переход в 260. Не заполнен - команда продолжить печать, переход 120
-    case 230:        
+    case 230:
+      pause_func();  
       if (digitalRead(sw_bed_low) == false && flag_pause == 0){        
         // Имитация нажатия кнопки "PAUSE"
         digitalWrite(pause_butt, HIGH);

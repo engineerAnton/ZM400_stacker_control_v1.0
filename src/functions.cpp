@@ -199,8 +199,8 @@ bool bed_init(){
 void bed_down(){
     mot_BD.setCurrentPosition(0);    
     // mot_BD.runToNewPosition(50 - mot_BD.currentPosition());    
-    mot_BD.moveTo(15);
-    while (mot_BD.currentPosition() != 15){
+    mot_BD.moveTo(13);
+    while (mot_BD.currentPosition() != 13){
         mot_BD.setSpeed(600);
         mot_BD.runSpeed();
     }
